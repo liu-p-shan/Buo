@@ -28,6 +28,10 @@ jobs:
           cp patches/backup_rules.xml patches/data_extraction_rules.xml android/app/src/main/res/xml/
           mkdir -p android/app/src/main/kotlin/com/buo/safemate
           cp patches/MainActivity.kt android/app/src/main/kotlin/com/buo/safemate/MainActivity.kt
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          cp patches/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          cp patches/ic_launcher_foreground.xml android/app/src/main/res/drawable/ic_launcher_foreground.xml
+          cp patches/ic_launcher_background.xml android/app/src/main/res/drawable/ic_launcher_background.xml
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle || true
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
 
