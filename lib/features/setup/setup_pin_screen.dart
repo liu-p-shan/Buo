@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/flutter_miuix.dart' as miuix;
+import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/constants/app_constants.dart';
 import 'package:safemate/core/security/auth_service.dart';
@@ -107,8 +107,8 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return miuix.Scaffold(
-      body: ImmersiveStatusBar.dark(
+    return MiuixScaffold(
+      content: ImmersiveStatusBar.dark(
         child: SafeArea(
           child: AnimatedSwitcher(
             duration: AppMotion.normal,
