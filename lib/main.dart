@@ -22,7 +22,6 @@ Future<void> main() async {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarContrastEnabled: false,
     ),
   );
 
@@ -42,7 +41,7 @@ Future<void> main() async {
 /// release 下抑制错误详情外泄(堆栈可能暴露文件路径/数据结构)
 void _hardenErrorHandling() {
   if (kReleaseMode) {
-    ErrorWidget.builder = (_, __) => const SizedBox.shrink();
+    ErrorWidget.builder = (details) => const SizedBox.shrink();
     FlutterError.onError = (details) {
       debugPrint('[SafeMate] flutter-error: ${details.exception.runtimeType}');
     };
