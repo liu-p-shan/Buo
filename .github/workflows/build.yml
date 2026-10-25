@@ -33,9 +33,8 @@ jobs:
           cp patches/ic_launcher_foreground.xml android/app/src/main/res/drawable/ic_launcher_foreground.xml
           cp patches/ic_launcher_background.xml android/app/src/main/res/drawable/ic_launcher_background.xml
           echo '-keep class net.sqlcipher.** { *; }' >> android/app/proguard-rules.pro
-          echo '-dontobfuscate' >> android/app/proguard-rules.pro
-          echo '-dontshrink' >> android/app/proguard-rules.pro
-          echo '-dontoptimize' >> android/app/proguard-rules.pro
+          echo '-dontwarn com.google.android.play.core.**' >> android/app/proguard-rules.pro
+          echo 'shrink=false' >> android/gradle.properties
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle 2>/dev/null || true
 
       - name: Disable code shrinking (print template for diagnostics)
@@ -69,8 +68,8 @@ jobs:
           rm -f test/widget_test.dart
           flutter test || echo "::warning::tests failed, build continues"
 
-      - name: Build APK
-        run: flutter build apk --release --split-debug-info=build/symbols
+      - name: Build APK (--no-shrink:官方开关,彻底关闭 R8,保住 SQLCipher JNI)
+        run: flutter build apk --release --no-shrink --split-debug-info=build/symbols
 
       - name: 出厂自检:SQLCipher 类必须存活,否则拒绝出包
         run: |
