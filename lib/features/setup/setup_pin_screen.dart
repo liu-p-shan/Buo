@@ -108,7 +108,7 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return MiuixScaffold(
-      content: ImmersiveStatusBar.dark(
+      content: (insets) => ImmersiveStatusBar.dark(
         child: SafeArea(
           child: AnimatedSwitcher(
             duration: AppMotion.normal,
