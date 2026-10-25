@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/flutter_miuix.dart' as miuix;
+import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/database/database_manager.dart';
 import 'package:safemate/core/database/note_dao.dart';
@@ -104,8 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return miuix.Scaffold(
-      body: ImmersiveStatusBar.dark(
+    return MiuixScaffold(
+      content: ImmersiveStatusBar.dark(
         child: SafeArea(
           bottom: false,
           child: Stack(
