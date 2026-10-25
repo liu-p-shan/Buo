@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/constants/app_constants.dart';
 import 'package:safemate/core/security/auth_service.dart';
@@ -12,10 +11,10 @@ enum _SetupStage {
   realConfirm,
   decoyFirst,
   decoyConfirm,
-  creating
+  creating,
 }
 
-/// 首启引导:真 PIN → 伪装 PIN → 生成密钥
+/// 首启引导:欢迎页 → 真 PIN → 伪装 PIN → 生成密钥
 class SetupPinScreen extends StatefulWidget {
   const SetupPinScreen({super.key});
 
@@ -93,7 +92,7 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
     setState(() => _stage = _SetupStage.creating);
     try {
       await AuthService.instance.setup(realPin: _realPin, decoyPin: _entry);
-      // 成功后根路由自动切换,本页无需处理
+      // 成功后根路由自动切换到首页
     } catch (_) {
       setState(() {
         _stage = _SetupStage.intro;
@@ -107,8 +106,8 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return MiuixScaffold(
-      content: (insets) => ImmersiveStatusBar.dark(
+    return Scaffold(
+      body: ImmersiveStatusBar.dark(
         child: SafeArea(
           child: AnimatedSwitcher(
             duration: AppMotion.normal,
@@ -232,6 +231,7 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
   }
 }
 
+/// 欢迎页:Logo + 三大特性 + 开始按钮(产品级首屏)
 class _IntroView extends StatelessWidget {
   const _IntroView({required this.hadCorruption, required this.onStart});
 
@@ -241,53 +241,149 @@ class _IntroView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            width: 88,
-            height: 88,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.accent, AppColors.companion],
-              ),
-              borderRadius: BorderRadius.circular(26),
-            ),
-            child: const Icon(Icons.shield_outlined,
-                size: 44, color: Colors.white),
-          ),
-          const SizedBox(height: 28),
-          const Text('欢迎使用 Buo',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          Text(
-            '笔记经 SQLCipher 全程加密存储,只有你能打开。\n接下来你将设置两个密码:一个日常使用,一个用于紧急时刻。',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: scheme.onSurfaceVariant, height: 1.6),
-          ),
-          if (hadCorruption) ...[
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: MediaQuery.sizeOf(context).height - 48,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             const SizedBox(height: 24),
             Container(
-              padding: const EdgeInsets.all(14),
+              width: 88,
+              height: 88,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.danger.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.accent, AppColors.companion],
+                ),
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: 0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Text(
-                '检测到加密存储异常(通常由系统还原或换机引起),旧数据已无法恢复,初始化时将安全抹除残留文件。',
-                style: TextStyle(color: scheme.onSurface, height: 1.5),
-              ),
+              child: const Icon(Icons.shield_outlined,
+                  size: 44, color: Colors.white),
             ),
+            const SizedBox(height: 24),
+            const Text(AppConstants.appName,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(AppConstants.appTagline,
+                textAlign: TextAlign.center,
+                style:
+                    TextStyle(fontSize: 14, color: scheme.onSurfaceVariant)),
+            const SizedBox(height: 32),
+            const _FeatureTile(
+              icon: Icons.layers_outlined,
+              color: AppColors.accent,
+              title: '双空间保护',
+              subtitle: '常用密码与伪装密码,各开一个独立加密空间',
+            ),
+            const SizedBox(height: 12),
+            const _FeatureTile(
+              icon: Icons.fingerprint,
+              color: AppColors.companion,
+              title: '指纹秒开',
+              subtitle: '验证指纹直达真实笔记,切后台自动上锁',
+            ),
+            const SizedBox(height: 12),
+            const _FeatureTile(
+              icon: Icons.lock_outline,
+              color: AppColors.success,
+              title: '全程加密',
+              subtitle: 'SQLCipher 本地加密,完全离线,数据不出设备',
+            ),
+            if (hadCorruption) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.danger.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  '检测到加密存储异常(通常由系统还原或换机引起),旧数据已无法恢复,初始化时将安全抹除残留文件。',
+                  style: TextStyle(color: scheme.onSurface, height: 1.5),
+                ),
+              ),
+            ],
+            const SizedBox(height: 32),
+            _PrimaryButton(label: '开始使用', onPressed: onStart),
+            const SizedBox(height: 12),
+            Text(
+              '下一步将为你的笔记设置两道密码',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: scheme.outline),
+            ),
+            const SizedBox(height: 24),
           ],
-          const SizedBox(height: 36),
-          _PrimaryButton(label: '开始设置', onPressed: onStart),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureTile extends StatelessWidget {
+  const _FeatureTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, size: 22, color: color),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 3),
+                Text(subtitle,
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        color: scheme.onSurfaceVariant,
+                        height: 1.4)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -311,15 +407,19 @@ class _PrimaryButton extends StatelessWidget {
             ? AppColors.accent
             : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(18),
+        elevation: enabled ? 2 : 0,
+        shadowColor: AppColors.accent.withValues(alpha: 0.4),
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(18),
           child: Container(
-            height: 52,
+            height: 54,
             alignment: Alignment.center,
             child: Text(label,
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white)),
           ),
         ),
       ),
