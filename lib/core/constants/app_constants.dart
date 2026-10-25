@@ -8,8 +8,8 @@ abstract final class AppConstants {
   // ── 应用信息 ────────────────────────────────────────────────
   static const String appName = 'Buo';
   static const String appTagline = '安全陪伴笔记';
-  static const String appVersion = '1.0.2';
-  static const String appBuild = '3';
+  static const String appVersion = '1.0.3';
+  static const String appBuild = '4';
   static const String contactName = '李明';
   static const String contactQQ = '2731379078';
   static const String contactHint = '遇到问题随时加QQ联系';
