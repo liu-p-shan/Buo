@@ -6,6 +6,18 @@ import 'package:flutter/foundation.dart';
 
 import 'package:safemate/core/constants/app_constants.dart';
 
+/// hex 编解码(crypto 3.0.7 已移除内置 hex 编解码器,自行实现)
+String bytesToHex(List<int> bytes) =>
+    bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+
+Uint8List hexToBytes(String hex) {
+  final result = BytesBuilder();
+  for (var i = 0; i + 1 < hex.length; i += 2) {
+    result.addByte(int.parse(hex.substring(i, i + 2), radix: 16));
+  }
+  return result.takeBytes();
+}
+
 /// PIN 校验块:盐 + 摘要 + 迭代次数(随凭据块持久化)
 class PinVerifyBlock {
   const PinVerifyBlock({
@@ -68,8 +80,8 @@ abstract final class PinHasher {
       keyLength: AppConstants.derivedKeyLengthBytes,
     );
     return PinVerifyBlock(
-      saltHex: hex.encode(salt),
-      hashHex: hex.encode(derived),
+      saltHex: bytesToHex(salt),
+      hashHex: bytesToHex(derived),
       iterations: AppConstants.pbkdf2Iterations,
     );
   }
@@ -78,13 +90,13 @@ abstract final class PinHasher {
   static Future<bool> verifyPin(String pin, PinVerifyBlock block) async {
     final derived = await pbkdf2(
       password: pin,
-      salt: hex.decode(block.saltHex),
+      salt: hexToBytes(block.saltHex),
       iterations: block.iterations,
       keyLength: block.hashHex.length ~/ 2,
     );
     return constantTimeEquals(
       derived,
-      Uint8List.fromList(hex.decode(block.hashHex)),
+      hexToBytes(block.hashHex),
     );
   }
 
