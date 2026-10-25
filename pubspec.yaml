@@ -1,24 +1,42 @@
 name: safemate
-description: A secure companion notes app.
-publish_to: 'none'
+description: "Buo 安全陪伴笔记 —— 双空间加密 · 陪伴式安全笔记"
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.5.0
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_miuix: ^0.0.3
-  sqflite_sqlcipher: ^3.4.0
+
+  # ── UI:小米 HyperOS 风格组件库(必须使用)─────────────────
+  flutter_miuix: ^1.0.0
+
+  # ── 安全核心 ─────────────────────────────────────────────
+  # SQLCipher 加密数据库(真库 / 伪装库双空间)
+  sqflite_sqlcipher: ^2.3.0
+
+  # 安全存储(严格锁定 9.0.0,存放 PIN 摘要与数据库密钥)
   flutter_secure_storage: ^9.0.0
+
+  # 生物识别(指纹解锁,回退 PIN 码)
   local_auth: ^2.3.0
+
+  # 加密算法(SHA-256 / HMAC,用于 PIN 码摘要校验)
   crypto: ^3.0.3
+
+  # ── 基础设施 ─────────────────────────────────────────────
+  # 数据库文件路径拼接
+  path: ^1.9.0
+  path_provider: ^2.1.4
+
+  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
