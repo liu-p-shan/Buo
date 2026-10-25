@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/flutter_miuix.dart';
+import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/constants/app_constants.dart';
 import 'package:safemate/core/navigation/app_routes.dart';
@@ -10,17 +10,33 @@ import 'package:safemate/features/home/home_screen.dart';
 import 'package:safemate/features/lock/lock_screen.dart';
 import 'package:safemate/features/setup/setup_pin_screen.dart';
 
-/// 根组件:三态路由(未配置 → 设置 / 已锁 → 解锁 / 已解锁 → 首页)
+/// 根组件:flutter_miuix 官方模式
+/// MiuixSystemTheme(跟随系统明暗) + MaterialApp + 三态路由
 class SafeMateApp extends StatelessWidget {
   const SafeMateApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MiuixApp(
-      navigatorKey: AppRoutes.rootNavigatorKey,
-      title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
-      home: const _RootRouter(),
+    return MiuixSystemTheme(
+      child: Builder(
+        builder: (context) {
+          final themeData = MiuixTheme.of(context);
+          return MaterialApp(
+            navigatorKey: AppRoutes.rootNavigatorKey,
+            title: AppConstants.appName,
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              useMaterial3: true,
+              brightness: themeData.brightness,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.accent,
+                brightness: themeData.brightness,
+              ),
+            ),
+            home: const _RootRouter(),
+          );
+        },
+      ),
     );
   }
 }
