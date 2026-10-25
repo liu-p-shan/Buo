@@ -32,11 +32,35 @@ jobs:
           cp patches/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           cp patches/ic_launcher_foreground.xml android/app/src/main/res/drawable/ic_launcher_foreground.xml
           cp patches/ic_launcher_background.xml android/app/src/main/res/drawable/ic_launcher_background.xml
-          # 关键:整体替换 app 构建配置,彻底关闭 R8 裁剪(防 SQLCipher JNI 断裂)
-          cp patches/app_build.gradle.kts android/app/build.gradle.kts
-          rm -f android/app/build.gradle
           echo '-keep class net.sqlcipher.** { *; }' >> android/app/proguard-rules.pro
+          echo '-dontobfuscate' >> android/app/proguard-rules.pro
+          echo '-dontshrink' >> android/app/proguard-rules.pro
+          echo '-dontoptimize' >> android/app/proguard-rules.pro
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle 2>/dev/null || true
+
+      - name: Disable code shrinking (print template for diagnostics)
+        run: |
+          for G in android/app/build.gradle.kts android/app/build.gradle; do
+            if [ -f "$G" ]; then
+              echo "========== $G (before) =========="
+              cat "$G"
+              sed -i 's/isMinifyEnabled = true/isMinifyEnabled = false/g' "$G"
+              sed -i 's/isMinifyEnabled=true/isMinifyEnabled=false/g' "$G"
+              sed -i 's/minifyEnabled true/minifyEnabled false/g' "$G"
+              sed -i 's/minifyEnabled = true/minifyEnabled = false/g' "$G"
+              sed -i 's/isShrinkResources = true/isShrinkResources = false/g' "$G"
+              sed -i 's/isShrinkResources=true/isShrinkResources=false/g' "$G"
+              sed -i 's/shrinkResources true/shrinkResources false/g' "$G"
+              sed -i 's/shrinkResources = true/shrinkResources = false/g' "$G"
+              echo "========== $G (after) =========="
+              cat "$G"
+            fi
+          done
+          if grep -nE 'inifyEnabled[[:space:]]*=[[:space:]]*true|minifyEnabled[[:space:]]+true' \
+              android/app/build.gradle.kts android/app/build.gradle 2>/dev/null; then
+            echo "::error::minify 仍为 true,补丁未命中,请查看上方模板原文"
+            exit 1
+          fi
 
       - run: flutter pub get
 
@@ -46,7 +70,7 @@ jobs:
           flutter test || echo "::warning::tests failed, build continues"
 
       - name: Build APK
-        run: flutter build apk --release --obfuscate --split-debug-info=build/symbols
+        run: flutter build apk --release --split-debug-info=build/symbols
 
       - name: 出厂自检:SQLCipher 类必须存活,否则拒绝出包
         run: |
