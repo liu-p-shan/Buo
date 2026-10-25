@@ -68,7 +68,7 @@ class _CredBlob {
       );
 }
 
-/// 初始化失败(带阶段代码,便于远程定位:E1 密钥派生/E2 安全存储/E3 数据库)
+/// 初始化失败(带阶段代码与异常详情,便于远程定位)
 class SetupException implements Exception {
   const SetupException(this.code, this.detail);
 
@@ -77,6 +77,11 @@ class SetupException implements Exception {
 
   @override
   String toString() => 'SetupException($code/$detail)';
+}
+
+String _errText(Object e) {
+  final s = e.toString();
+  return s.length > 160 ? '${s.substring(0, 160)}…' : s;
 }
 
 /// 鉴权中枢:双 PIN 鉴别路由 / 指纹 → 真库 / 首启编排 / 损坏自愈
@@ -150,14 +155,14 @@ class AuthService extends ChangeNotifier {
         realIndex,
       );
     } catch (e) {
-      throw SetupException('E1', e.runtimeType.toString());
+      throw SetupException('E1', _errText(e));
     }
 
     try {
       await SecureStorageService.instance
           .writeJson(AppConstants.credBlobKey, blob.toJson());
     } catch (e) {
-      throw SetupException('E2', e.runtimeType.toString());
+      throw SetupException('E2', _errText(e));
     }
     _cred = blob;
     _configured = true;
@@ -189,7 +194,7 @@ class AuthService extends ChangeNotifier {
         await SecureStorageService.instance.delete(AppConstants.credBlobKey);
         await DatabaseManager.wipeAllFiles();
       } catch (_) {}
-      throw SetupException('E3', e.runtimeType.toString());
+      throw SetupException('E3', _errText(e));
     }
 
     _activeSpace = VaultSpace.real;
