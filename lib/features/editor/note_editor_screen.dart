@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/flutter_miuix.dart' as miuix;
+import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/database/database_manager.dart';
 import 'package:safemate/core/database/note_dao.dart';
@@ -77,23 +77,54 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return miuix.Scaffold(
-      appBar: miuix.AppBar(
-        title: Text(_isNew ? '新建笔记' : '编辑笔记'),
-        actions: [
-          if (!_isNew)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: '移入回收站',
-              onPressed: _delete,
-            ),
-        ],
-      ),
-      body: ImmersiveStatusBar.dark(
+    return MiuixScaffold(
+      content: ImmersiveStatusBar.dark(
         child: SafeArea(
+          bottom: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── 自绘标题栏 ──
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _isNew ? '新建笔记' : '编辑笔记',
+                      style: const TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  if (!_isNew)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: '移入回收站',
+                      onPressed: _delete,
+                    ),
+                  const SizedBox(width: 6),
+                  Material(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(14),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: _saving ? null : _save,
+                      child: const Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Text('保存',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: TextField(
@@ -129,10 +160,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               _EditorBottomBar(
                 selectedColor: _color,
                 pinned: _pinned,
-                saving: _saving,
                 onSelectColor: (i) => setState(() => _color = i),
                 onTogglePinned: () => setState(() => _pinned = !_pinned),
-                onSave: _save,
               ),
             ],
           ),
@@ -146,18 +175,14 @@ class _EditorBottomBar extends StatelessWidget {
   const _EditorBottomBar({
     required this.selectedColor,
     required this.pinned,
-    required this.saving,
     required this.onSelectColor,
     required this.onTogglePinned,
-    required this.onSave,
   });
 
   final int selectedColor;
   final bool pinned;
-  final bool saving;
   final ValueChanged<int> onSelectColor;
   final VoidCallback onTogglePinned;
-  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -214,32 +239,6 @@ class _EditorBottomBar extends StatelessWidget {
               ),
               tooltip: pinned ? '取消置顶' : '置顶',
               onPressed: onTogglePinned,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Material(
-            color: AppColors.accent,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: saving ? null : onSave,
-              child: Container(
-                height: 42,
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                alignment: Alignment.center,
-                child: saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('保存',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white)),
-              ),
             ),
           ),
         ],
