@@ -75,7 +75,7 @@ jobs:
         run: |
           rm -rf /tmp/apkchk && mkdir -p /tmp/apkchk
           unzip -o -q build/app/outputs/flutter-apk/app-release.apk "classes*.dex" -d /tmp/apkchk
-          if grep -q "net/sqlcipher" /tmp/apkchk/classes*.dex 2>/dev/null; then
+          if grep -q -e "net/zetetic" -e "net/sqlcipher" /tmp/apkchk/classes*.dex 2>/dev/null; then
             echo "SQLCipher classes OK"
           else
             echo "::error::SQLCipher classes missing from dex (R8 stripped them again!)"
