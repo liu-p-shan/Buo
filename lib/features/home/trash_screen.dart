@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/database/database_manager.dart';
 import 'package:safemate/core/database/note_dao.dart';
@@ -29,8 +28,8 @@ class _TrashScreenState extends State<TrashScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return MiuixScaffold(
-      content: (insets) => ImmersiveStatusBar.dark(
+    return Scaffold(
+      body: ImmersiveStatusBar.dark(
         child: SafeArea(
           bottom: false,
           child: Column(
