@@ -137,7 +137,7 @@ class _LockScreenState extends State<LockScreen>
     final scheme = Theme.of(context).colorScheme;
     final cooling = _cooldownTicker != null;
     return MiuixScaffold(
-      content: ImmersiveStatusBar.dark(
+      content: (insets) => ImmersiveStatusBar.dark(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
