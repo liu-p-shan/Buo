@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/flutter_miuix.dart' as miuix;
+import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/database/database_manager.dart';
 import 'package:safemate/core/database/note_dao.dart';
@@ -29,36 +29,45 @@ class _TrashScreenState extends State<TrashScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return miuix.Scaffold(
-      appBar: miuix.AppBar(
-        title: const Text('回收站'),
-      ),
-      body: ImmersiveStatusBar.dark(
+    return MiuixScaffold(
+      content: ImmersiveStatusBar.dark(
         child: SafeArea(
-          child: _items.isEmpty
-              ? Center(
-                  child: Text('回收站是空的',
-                      style: TextStyle(color: scheme.outline)))
-              : Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 20, top: 8),
-                        child: TextButton(
-                          onPressed: () async {
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── 自绘标题栏 ──
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const Expanded(
+                    child: Text('回收站',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w700)),
+                  ),
+                  TextButton(
+                    onPressed: _items.isEmpty
+                        ? null
+                        : () async {
                             await DatabaseManager.instance.dao.emptyTrash();
                             _reload();
                           },
-                          child: const Text('清空回收站',
-                              style: TextStyle(color: AppColors.danger)),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.separated(
+                    child: const Text('清空',
+                        style: TextStyle(color: AppColors.danger)),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: _items.isEmpty
+                    ? Center(
+                        child: Text('回收站是空的',
+                            style: TextStyle(color: scheme.outline)))
+                    : ListView.separated(
                         physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                         itemCount: _items.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, i) {
@@ -109,9 +118,9 @@ class _TrashScreenState extends State<TrashScreen> {
                           );
                         },
                       ),
-                    ),
-                  ],
-                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
