@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_miuix/flutter_miuix.dart' as miuix;
+import 'package:flutter_miuix/miuix.dart';
 
 import 'package:safemate/core/constants/app_constants.dart';
 import 'package:safemate/core/security/auth_service.dart';
@@ -136,8 +136,8 @@ class _LockScreenState extends State<LockScreen>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final cooling = _cooldownTicker != null;
-    return miuix.Scaffold(
-      body: ImmersiveStatusBar.dark(
+    return MiuixScaffold(
+      content: ImmersiveStatusBar.dark(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
