@@ -40,7 +40,10 @@ Future<void> showMoreSheet(BuildContext context, {VoidCallback? onChanged}) {
             label: '关于 Buo',
             onTap: () {
               Navigator.pop(sheetContext);
-              AppRoutes.showSpringDialog(context, _AboutDialog.new);
+              AppRoutes.showSpringDialog(
+                context,
+                builder: (_) => const _AboutDialog(),
+              );
             },
           ),
           _MoreAction(
