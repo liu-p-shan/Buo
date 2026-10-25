@@ -98,14 +98,14 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败(代码 ${e.code}),请把代码反馈给开发者';
+        _error = '初始化失败(${e.code}-${e.detail}),请把括号里的内容反馈给开发者';
       });
     } catch (e) {
       setState(() {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败(代码 E0),请把代码反馈给开发者';
+        _error = '初始化失败(E0-${e.runtimeType}),请把括号里的内容反馈给开发者';
       });
     }
   }
