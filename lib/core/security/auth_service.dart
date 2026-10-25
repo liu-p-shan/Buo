@@ -119,12 +119,12 @@ class AuthService extends ChangeNotifier {
     final blob = _CredBlob(
       _VaultCred(
         await PinHasher.hashPin(realIndex == 0 ? realPin : decoyPin),
-        hex.encode(SecureBytes.generate(32)),
+        bytesToHex(SecureBytes.generate(32)),
         AppConstants.vaultSlotA,
       ),
       _VaultCred(
         await PinHasher.hashPin(realIndex == 0 ? decoyPin : realPin),
-        hex.encode(SecureBytes.generate(32)),
+        bytesToHex(SecureBytes.generate(32)),
         AppConstants.vaultSlotB,
       ),
       realIndex,
