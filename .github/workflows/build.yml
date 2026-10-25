@@ -17,7 +17,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.27.4
 
       - name: Scaffold android platform (flutter create does NOT touch existing lib/)
         run: flutter create --platforms=android --org com.buo --project-name safemate .
