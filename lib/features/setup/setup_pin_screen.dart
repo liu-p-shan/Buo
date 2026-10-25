@@ -93,12 +93,19 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
     try {
       await AuthService.instance.setup(realPin: _realPin, decoyPin: _entry);
       // 成功后根路由自动切换到首页
-    } catch (_) {
+    } on SetupException catch (e) {
       setState(() {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败,请重试';
+        _error = '初始化失败(代码 ${e.code}),请把代码反馈给开发者';
+      });
+    } catch (e) {
+      setState(() {
+        _stage = _SetupStage.intro;
+        _entry = '';
+        _realPin = '';
+        _error = '初始化失败(代码 E0),请把代码反馈给开发者';
       });
     }
   }
