@@ -79,24 +79,34 @@ class AuthService extends ChangeNotifier {
   _CredBlob? _cred;
   VaultSpace? _activeSpace;
   bool _configured = false;
+  bool _bootstrapped = false;
 
   bool get isConfigured => _configured;
+  bool get bootstrapped => _bootstrapped;
   bool get hadCorruption => SecureStorageService.instance.corruptionDetected;
   VaultSpace get activeSpace => _activeSpace ?? VaultSpace.real;
 
-  /// 启动加载:读取凭据块;损坏 → 未配置态(重置流程),绝不带病运行
+  /// 启动加载:读取凭据块;任何异常都收敛到"未配置/已就绪",绝不卡启动页
   Future<void> load() async {
     try {
-      final json =
-          await SecureStorageService.instance.readJson(AppConstants.credBlobKey);
-      _cred = json == null ? null : _CredBlob.fromJson(json);
-      _configured = _cred != null;
-    } on SecureStorageCorruptedException {
+      try {
+        final json = await SecureStorageService.instance
+            .readJson(AppConstants.credBlobKey);
+        _cred = json == null ? null : _CredBlob.fromJson(json);
+        _configured = _cred != null;
+      } on SecureStorageCorruptedException {
+        _cred = null;
+        _configured = false;
+        Log.d('[SafeMate] cred blob unreadable → reset flow');
+      }
+    } catch (e) {
       _cred = null;
       _configured = false;
-      Log.d('[SafeMate] cred blob unreadable → reset flow');
+      Log.d('[SafeMate] load failed: ${e.runtimeType}');
+    } finally {
+      _bootstrapped = true;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   /// 首启/重置:随机槽位绑定 + 双密钥生成 + 双 PIN 摘要 + 伪装库预置内容
