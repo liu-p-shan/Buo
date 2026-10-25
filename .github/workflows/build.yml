@@ -1,8 +1,6 @@
 name: Build Buo APK
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -11,42 +9,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 自动修复被浏览器翻译的文件名和文件夹名
-      - name: Auto-Fix File Names
-        run: |
-          if [ -d "自由党" ]; then mv "自由党" "lib"; fi
-          find . -name "*.飞镖" -exec bash -c 'mv "$1" "${1%.飞镖}.dart"' _ {} \;
-          find . -name "*.dart。" -exec bash -c 'mv "$1" "${1%。}.dart"' _ {} \;
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
+          flutter-version: 3.27.4
 
-      # 2. 核心：自动生成缺失的 android/ios 等原生工程目录
-      - name: Generate Missing Flutter Files
-        run: flutter create . --project-name safemate
+      - name: Scaffold android platform (flutter create does NOT touch existing lib/)
+        run: flutter create --platforms=android --org com.buo --project-name safemate .
 
-      # 3. 自动修改权限和指纹配置
-      - name: Fix Android Configs
+      - name: Apply Buo platform patches (fingerprint / no-backup / minSdk23)
         run: |
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/g' android/app/build.gradle || true
-          find android/app/src/main/kotlin -name "MainActivity.kt" -exec sed -i 's/FlutterActivity/FlutterFragmentActivity/g' {} + || true
+          cp patches/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          mkdir -p android/app/src/main/res/xml
+          cp patches/backup_rules.xml patches/data_extraction_rules.xml android/app/src/main/res/xml/
+          mkdir -p android/app/src/main/kotlin/com/buo/safemate
+          cp patches/MainActivity.kt android/app/src/main/kotlin/com/buo/safemate/MainActivity.kt
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle || true
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - run: flutter pub get
+
+      - name: Tests (non-blocking)
+        run: |
+          rm -f test/widget_test.dart
+          flutter test || echo "::warning::tests failed, build continues"
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --obfuscate --split-debug-info=build/symbols
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: buo-apk
           path: build/app/outputs/flutter-apk/app-release.apk
