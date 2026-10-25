@@ -25,23 +25,38 @@ Future<void> main() async {
     ),
   );
 
-  // ── 安全服务预热 ──────────────────────────────────────────────
-  await SecureStorageService.instance.warmUp();
-  await AuthService.instance.load();
-  AppLockController.instance.initialize();
-
+  // ── 先让 UI 上屏,再做安全初始化 ─────────────────────────────
+  // 任何初始化异常都不会把用户卡死在启动画面
   runApp(const SafeMateApp());
 
-  // ── 首帧后开启 FLAG_SECURE:防截屏 + 任务栈预览空白 ───────────
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    SecureWindow.setEnabled(true);
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try {
+      await SecureStorageService.instance.warmUp();
+      await AuthService.instance.load();
+    } catch (e) {
+      // fail-open:初始化异常也照常进入未配置/锁定态,绝不白屏
+      debugPrint('[SafeMate] bootstrap error: ${e.runtimeType}');
+    } finally {
+      AppLockController.instance.initialize();
+      SecureWindow.setEnabled(true);
+    }
   });
 }
 
-/// release 下抑制错误详情外泄(堆栈可能暴露文件路径/数据结构)
+/// release 下抑制堆栈外泄,但保留可见的出错提示(方便用户反馈问题)
 void _hardenErrorHandling() {
   if (kReleaseMode) {
-    ErrorWidget.builder = (details) => const SizedBox.shrink();
+    ErrorWidget.builder = (details) => const Material(
+          color: Color(0xFFF7F7F7),
+          child: Center(
+            child: Text(
+              '抱歉,应用遇到了问题\n请退出后重新打开',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Color(0xFF888888), fontSize: 14, height: 1.8),
+            ),
+          ),
+        );
     FlutterError.onError = (details) {
       debugPrint('[SafeMate] flutter-error: ${details.exception.runtimeType}');
     };
