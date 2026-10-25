@@ -78,7 +78,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return MiuixScaffold(
-      content: ImmersiveStatusBar.dark(
+      content: (insets) => ImmersiveStatusBar.dark(
         child: SafeArea(
           bottom: false,
           child: Column(
