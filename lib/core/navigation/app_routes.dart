@@ -18,8 +18,8 @@ class AppRoutes {
 
   /// 弹簧缩放弹窗(easeOutBack,HyperOS 卡片弹出质感)
   static Future<T?> showSpringDialog<T>(
-    BuildContext context,
-    WidgetBuilder builder, {
+    BuildContext context, {
+    required WidgetBuilder builder,
     bool dismissible = true,
   }) {
     return showGeneralDialog<T>(
