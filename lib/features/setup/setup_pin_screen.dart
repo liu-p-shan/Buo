@@ -98,14 +98,14 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败(${e.code}-${e.detail}),请把括号里的内容反馈给开发者';
+        _error = '初始化失败 [${e.code}] ${e.detail}\n请把这段话截图发给开发者';
       });
     } catch (e) {
       setState(() {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败(E0-${e.runtimeType}),请把括号里的内容反馈给开发者';
+        _error = '初始化失败 [E0] ${e.runtimeType}\n请把这段话截图发给开发者';
       });
     }
   }
@@ -142,6 +142,7 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
       case _SetupStage.intro:
         return _IntroView(
           hadCorruption: AuthService.instance.hadCorruption,
+          error: _error,
           onStart: () => setState(() => _stage = _SetupStage.realFirst),
         );
       case _SetupStage.creating:
@@ -240,10 +241,15 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
 
 /// 欢迎页:Logo + 三大特性 + 开始按钮(产品级首屏)
 class _IntroView extends StatelessWidget {
-  const _IntroView({required this.hadCorruption, required this.onStart});
+  const _IntroView({
+    required this.hadCorruption,
+    required this.onStart,
+    this.error,
+  });
 
   final bool hadCorruption;
   final VoidCallback onStart;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
@@ -311,6 +317,21 @@ class _IntroView extends StatelessWidget {
               title: '全程加密',
               subtitle: 'SQLCipher 本地加密,完全离线,数据不出设备',
             ),
+            if (error != null) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.danger.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  error!,
+                  style: TextStyle(
+                      color: AppColors.danger, fontSize: 12.5, height: 1.5),
+                ),
+              ),
+            ],
             if (hadCorruption) ...[
               const SizedBox(height: 20),
               Container(
