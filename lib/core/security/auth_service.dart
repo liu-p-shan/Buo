@@ -68,6 +68,17 @@ class _CredBlob {
       );
 }
 
+/// 初始化失败(带阶段代码,便于远程定位:E1 密钥派生/E2 安全存储/E3 数据库)
+class SetupException implements Exception {
+  const SetupException(this.code, this.detail);
+
+  final String code;
+  final String detail;
+
+  @override
+  String toString() => 'SetupException($code/$detail)';
+}
+
 /// 鉴权中枢:双 PIN 鉴别路由 / 指纹 → 真库 / 首启编排 / 损坏自愈
 class AuthService extends ChangeNotifier {
   AuthService._();
@@ -110,59 +121,77 @@ class AuthService extends ChangeNotifier {
   }
 
   /// 首启/重置:随机槽位绑定 + 双密钥生成 + 双 PIN 摘要 + 伪装库预置内容
+  /// 每阶段带错误代码;失败时回滚到干净状态,绝不留半初始化
   Future<void> setup({
     required String realPin,
     required String decoyPin,
   }) async {
-    assert(realPin != decoyPin, '真/伪 PIN 必须不同');
-
     if (hadCorruption) {
-      await DatabaseManager.wipeAllFiles();
+      try {
+        await DatabaseManager.wipeAllFiles();
+      } catch (_) {}
     }
 
     final realIndex = SecureBytes.generate(1)[0] & 1;
-    final realSlot =
-        realIndex == 0 ? AppConstants.vaultSlotA : AppConstants.vaultSlotB;
-    final decoySlot =
-        realIndex == 0 ? AppConstants.vaultSlotB : AppConstants.vaultSlotA;
 
-    final blob = _CredBlob(
-      _VaultCred(
-        await PinHasher.hashPin(realIndex == 0 ? realPin : decoyPin),
-        bytesToHex(SecureBytes.generate(32)),
-        AppConstants.vaultSlotA,
-      ),
-      _VaultCred(
-        await PinHasher.hashPin(realIndex == 0 ? decoyPin : realPin),
-        bytesToHex(SecureBytes.generate(32)),
-        AppConstants.vaultSlotB,
-      ),
-      realIndex,
-    );
+    _CredBlob blob;
+    try {
+      blob = _CredBlob(
+        _VaultCred(
+          await PinHasher.hashPin(realIndex == 0 ? realPin : decoyPin),
+          bytesToHex(SecureBytes.generate(32)),
+          AppConstants.vaultSlotA,
+        ),
+        _VaultCred(
+          await PinHasher.hashPin(realIndex == 0 ? decoyPin : realPin),
+          bytesToHex(SecureBytes.generate(32)),
+          AppConstants.vaultSlotB,
+        ),
+        realIndex,
+      );
+    } catch (e) {
+      throw SetupException('E1', e.runtimeType.toString());
+    }
 
-    await SecureStorageService.instance
-        .writeJson(AppConstants.credBlobKey, blob.toJson());
+    try {
+      await SecureStorageService.instance
+          .writeJson(AppConstants.credBlobKey, blob.toJson());
+    } catch (e) {
+      throw SetupException('E2', e.runtimeType.toString());
+    }
     _cred = blob;
     _configured = true;
 
-    // 伪装库预置日常内容(空库一眼假)
-    final decoyDao = await DatabaseManager.instance.open(
-      VaultSpace.decoy,
-      dbKeyHex: blob.decoy.dbKeyHex,
-      fileName: blob.decoy.fileName,
-      allowOrphanReset: true,
-    );
-    for (final seed in _decoySeeds) {
-      await decoyDao.create(title: seed.$1, content: seed.$2);
+    try {
+      // 伪装库预置日常内容(空库一眼假)
+      final decoyDao = await DatabaseManager.instance.open(
+        VaultSpace.decoy,
+        dbKeyHex: blob.decoy.dbKeyHex,
+        fileName: blob.decoy.fileName,
+        allowOrphanReset: true,
+      );
+      for (final seed in _decoySeeds) {
+        await decoyDao.create(title: seed.$1, content: seed.$2);
+      }
+      // 打开真库
+      await DatabaseManager.instance.open(
+        VaultSpace.real,
+        dbKeyHex: blob.real.dbKeyHex,
+        fileName: blob.real.fileName,
+        allowOrphanReset: true,
+      );
+    } catch (e) {
+      // 回滚:清凭据 + 抹库文件,回到可重试的干净状态
+      _cred = null;
+      _configured = false;
+      try {
+        await DatabaseManager.instance.closeAll();
+        await SecureStorageService.instance.delete(AppConstants.credBlobKey);
+        await DatabaseManager.wipeAllFiles();
+      } catch (_) {}
+      throw SetupException('E3', e.runtimeType.toString());
     }
 
-    // 打开真库并解锁
-    await DatabaseManager.instance.open(
-      VaultSpace.real,
-      dbKeyHex: blob.real.dbKeyHex,
-      fileName: blob.real.fileName,
-      allowOrphanReset: true,
-    );
     _activeSpace = VaultSpace.real;
     AppLockController.instance.unlock();
     notifyListeners();
