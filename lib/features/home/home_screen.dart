@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return MiuixScaffold(
-      content: ImmersiveStatusBar.dark(
+      content: (insets) => ImmersiveStatusBar.dark(
         child: SafeArea(
           bottom: false,
           child: Stack(
@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _SearchBar(
                       controller: _searchCtrl,
                       onChanged: (v) => setState(() => _keyword = v),
-                      onSubmitted: (_) => _reload(),
+                      onSubmitted: () => _reload(),
                       onCleared: () {
                         _searchCtrl.clear();
                         setState(() => _keyword = '');
