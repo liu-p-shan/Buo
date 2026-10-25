@@ -21,7 +21,7 @@ jobs:
       - name: Scaffold android platform (flutter create does NOT touch existing lib/)
         run: flutter create --platforms=android --org com.buo --project-name safemate .
 
-      - name: Apply Buo platform patches (fingerprint / no-backup / minSdk23)
+      - name: Apply Buo platform patches
         run: |
           cp patches/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           mkdir -p android/app/src/main/res/xml
@@ -32,6 +32,12 @@ jobs:
           cp patches/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           cp patches/ic_launcher_foreground.xml android/app/src/main/res/drawable/ic_launcher_foreground.xml
           cp patches/ic_launcher_background.xml android/app/src/main/res/drawable/ic_launcher_background.xml
+          # 关键:关闭代码裁剪 + 保留 SQLCipher 原生类(否则运行时打开数据库崩溃)
+          echo '-keep class net.sqlcipher.** { *; }' >> android/app/proguard-rules.pro
+          sed -i 's/minifyEnabled true/minifyEnabled false/' android/app/build.gradle || true
+          sed -i 's/isMinifyEnabled = true/isMinifyEnabled = false/' android/app/build.gradle.kts || true
+          sed -i 's/shrinkResources true/shrinkResources false/' android/app/build.gradle || true
+          sed -i 's/isShrinkResources = true/isShrinkResources = false/' android/app/build.gradle.kts || true
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle || true
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
 
