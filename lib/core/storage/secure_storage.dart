@@ -31,7 +31,9 @@ class SecureStorageService {
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
+      // 不用 EncryptedSharedPreferences:它在部分国产 ROM(小米/华为等)
+      // 上因 Keymaster 实现差异会读写失败;默认模式同样由 AndroidKeyStore
+      // 密钥加密,兼容性最好。
       resetOnError: true,
     ),
   );
