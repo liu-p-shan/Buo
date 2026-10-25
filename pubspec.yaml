@@ -15,7 +15,7 @@ dependencies:
 
   # ── 安全核心 ─────────────────────────────────────────────
   # SQLCipher 加密数据库(真库 / 伪装库双空间)
-  sqflite_sqlcipher: ^2.3.0
+  sqflite_sqlcipher: 3.4.0
 
   # 安全存储(严格锁定 9.0.0,存放 PIN 摘要与数据库密钥)
   flutter_secure_storage: ^9.0.0
