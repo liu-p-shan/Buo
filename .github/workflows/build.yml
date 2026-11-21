@@ -2,6 +2,11 @@ name: Build Buo APK
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -32,10 +37,11 @@ jobs:
           cp patches/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           cp patches/ic_launcher_foreground.xml android/app/src/main/res/drawable/ic_launcher_foreground.xml
           cp patches/ic_launcher_background.xml android/app/src/main/res/drawable/ic_launcher_background.xml
+          cp patches/app_build.gradle.kts android/app/build.gradle.kts
+          rm -f android/app/build.gradle
           echo '-keep class net.sqlcipher.** { *; }' >> android/app/proguard-rules.pro
           echo '-dontwarn com.google.android.play.core.**' >> android/app/proguard-rules.pro
           echo 'shrink=false' >> android/gradle.properties
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle 2>/dev/null || true
 
       - name: Disable code shrinking (print template for diagnostics)
         run: |
@@ -57,7 +63,7 @@ jobs:
           done
           if grep -nE 'inifyEnabled[[:space:]]*=[[:space:]]*true|minifyEnabled[[:space:]]+true' \
               android/app/build.gradle.kts android/app/build.gradle 2>/dev/null; then
-            echo "::error::minify 仍为 true,补丁未命中,请查看上方模板原文"
+            echo "::error::minify still true, patch missed, see template above"
             exit 1
           fi
 
@@ -68,10 +74,10 @@ jobs:
           rm -f test/widget_test.dart
           flutter test || echo "::warning::tests failed, build continues"
 
-      - name: Build APK (--no-shrink:官方开关,彻底关闭 R8,保住 SQLCipher JNI)
+      - name: Build APK (--no-shrink keeps SQLCipher JNI alive)
         run: flutter build apk --release --no-shrink --split-debug-info=build/symbols
 
-      - name: 出厂自检:SQLCipher 类必须存活,否则拒绝出包
+      - name: Factory check - SQLCipher must survive, else refuse to ship
         run: |
           rm -rf /tmp/apkchk && mkdir -p /tmp/apkchk
           unzip -o -q build/app/outputs/flutter-apk/app-release.apk "classes*.dex" -d /tmp/apkchk
@@ -81,8 +87,35 @@ jobs:
             echo "::error::SQLCipher classes missing from dex (R8 stripped them again!)"
             exit 1
           fi
+          echo "----- native libs in APK -----"
+          unzip -l build/app/outputs/flutter-apk/app-release.apk | grep -E "lib/.*\.so" || true
+          if unzip -l build/app/outputs/flutter-apk/app-release.apk | grep -qi "sqlcipher"; then
+            echo "SQLCipher native lib OK"
+          else
+            echo "::warning::no sqlcipher native lib found in APK, please check manually"
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
           name: buo-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publish Release (direct .apk download, no zip detour)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk Buo-v1.0.4.apk
+          cat > /tmp/release-notes.md <<'EOF'
+          ## Buo v1.0.4
+
+          Fixed: first-launch setup failed during "generating encryption keys" and told users to contact the developer.
+
+          - Actually apply patches/app_build.gradle.kts (prepared but never used; builds silently used the default template)
+          - Secure storage write now auto-resets and retries once (ROM compatibility)
+          - Vault open failures of any type now trigger the delete-and-rebuild self-heal
+          - Friendlier setup error message: auto-cleaned, just retry
+          - Setup flow got a soft gradient background
+
+          Install: download Buo-v1.0.4.apk below and open it on your phone. Do NOT use the Actions artifact zip.
+          EOF
+          gh release create v1.0.4 Buo-v1.0.4.apk --title "Buo v1.0.4" --notes-file /tmp/release-notes.md || gh release upload v1.0.4 Buo-v1.0.4.apk --clobber
