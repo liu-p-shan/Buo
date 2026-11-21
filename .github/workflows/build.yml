@@ -2,8 +2,6 @@ name: Build Buo APK
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: write
@@ -104,18 +102,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk Buo-v1.0.4.apk
+          cp build/app/outputs/flutter-apk/app-release.apk Buo-v1.0.5.apk
           cat > /tmp/release-notes.md <<'EOF'
-          ## Buo v1.0.4
+          ## Buo v1.0.5
 
-          Fixed: first-launch setup failed during "generating encryption keys" and told users to contact the developer.
+          New launcher icon: flat blue key on white, simple and clean (replaces the shield outline).
 
-          - Actually apply patches/app_build.gradle.kts (prepared but never used; builds silently used the default template)
-          - Secure storage write now auto-resets and retries once (ROM compatibility)
-          - Vault open failures of any type now trigger the delete-and-rebuild self-heal
-          - Friendlier setup error message: auto-cleaned, just retry
-          - Setup flow got a soft gradient background
-
-          Install: download Buo-v1.0.4.apk below and open it on your phone. Do NOT use the Actions artifact zip.
+          Install: download Buo-v1.0.5.apk below and open it on your phone. Do NOT use the Actions artifact zip.
           EOF
-          gh release create v1.0.4 Buo-v1.0.4.apk --title "Buo v1.0.4" --notes-file /tmp/release-notes.md || gh release upload v1.0.4 Buo-v1.0.4.apk --clobber
+          gh release create v1.0.5 Buo-v1.0.5.apk --title "Buo v1.0.5" --notes-file /tmp/release-notes.md || gh release upload v1.0.5 Buo-v1.0.5.apk --clobber
