@@ -98,14 +98,18 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败 [${e.code}] ${e.detail}\n请把这段话截图发给开发者';
+        _error = '这一步没完成,别担心,残留数据已经自动清理好了,'
+            '点「开始使用」再试一次就行。\n'
+            '如果反复失败,请把这行小字截图发给开发者:[${e.code}] ${e.detail}';
       });
     } catch (e) {
       setState(() {
         _stage = _SetupStage.intro;
         _entry = '';
         _realPin = '';
-        _error = '初始化失败 [E0] ${e.runtimeType}\n请把这段话截图发给开发者';
+        _error = '这一步没完成,别担心,残留数据已经自动清理好了,'
+            '点「开始使用」再试一次就行。\n'
+            '如果反复失败,请把这行小字截图发给开发者:[E0] ${e.runtimeType}';
       });
     }
   }
@@ -115,22 +119,36 @@ class _SetupPinScreenState extends State<SetupPinScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: ImmersiveStatusBar.dark(
-        child: SafeArea(
-          child: AnimatedSwitcher(
-            duration: AppMotion.normal,
-            switchInCurve: Curves.easeOutCubic,
-            transitionBuilder: (child, anim) => FadeTransition(
-              opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
-              child: SlideTransition(
-                position: Tween(
-                  begin: const Offset(0, 0.03),
-                  end: Offset.zero,
-                ).animate(
-                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-                child: child,
-              ),
+        child: Container(
+          // v1.0.4 美化:柔和的品牌色渐变背景(随主题明暗自适应)
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.accent.withValues(alpha: 0.10),
+                scheme.surface,
+                scheme.surface,
+              ],
             ),
-            child: _buildStage(scheme),
+          ),
+          child: SafeArea(
+            child: AnimatedSwitcher(
+              duration: AppMotion.normal,
+              switchInCurve: Curves.easeOutCubic,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0, 0.03),
+                    end: Offset.zero,
+                  ).animate(
+                      CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                  child: child,
+                ),
+              ),
+              child: _buildStage(scheme),
+            ),
           ),
         ),
       ),
