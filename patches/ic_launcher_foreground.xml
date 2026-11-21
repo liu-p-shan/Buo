@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Buo 桌面图标:青蓝色单线盾牌(自适应图标前景) -->
+<!-- Buo 桌面图标:扁平蓝钥匙(自适应图标前景),白底简洁风 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:pathData="M54,25 C62.5,31.5 71,34 79,34 C79,56.5 73.5,73 54,83.5 C34.5,73 29,56.5 29,34 C37,34 45.5,31.5 54,25 Z"
-        android:strokeColor="#0FA8CC"
-        android:strokeWidth="4.6"
-        android:strokeLineJoin="round"
-        android:strokeLineCap="round"
+        android:pathData="M24.75,52 A12.25,12.25 0 1,1 49.25,52 A12.25,12.25 0 1,1 24.75,52 Z"
+        android:strokeColor="#0E7FE0"
+        android:strokeWidth="8.5"
         android:fillColor="#00000000" />
+    <path
+        android:pathData="M46,43.5 H83 A5.5,5.5 0 0 1 88.5,49 V55 A5.5,5.5 0 0 1 83,60.5 H75.5 V70 A3,3 0 0 1 72.5,73 H67.5 A3,3 0 0 1 64.5,70 V60.5 H46 Z"
+        android:fillColor="#0E7FE0" />
 </vector>
