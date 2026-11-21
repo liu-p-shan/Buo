@@ -2,7 +2,7 @@ name: Build Buo APK
 
 on:
   workflow_dispatch:
-  
+
 permissions:
   contents: write
 
