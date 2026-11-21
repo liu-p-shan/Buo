@@ -112,7 +112,10 @@ class DatabaseManager {
         onUpgrade: _onUpgrade,
         onDowngrade: onDatabaseDowngradeDelete,
       );
-    } on DatabaseException catch (e) {
+    } catch (e) {
+      // v1.0.4:不只收 DatabaseException。原生库加载失败、平台通道异常等
+      // 以前会绕过 VaultOpenException,导致上层 allowOrphanReset 的
+      // 删库重建自愈永远触发不到,首启直接报"初始化失败"。
       throw VaultOpenException(e.toString());
     }
   }
