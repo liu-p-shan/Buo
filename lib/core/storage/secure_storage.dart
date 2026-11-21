@@ -53,8 +53,20 @@ class SecureStorageService {
 
   Future<String?> read(String key) => _guard(() => _storage.read(key: key));
 
-  Future<void> write(String key, String value) =>
-      _guard(() => _storage.write(key: key, value: value));
+  /// 写入(v1.0.4 兼容兜底):部分国产 ROM 首次写安全存储会因 KeyStore
+  /// 状态异常失败;清空残留密钥集后重试一次,多数情况可自愈,
+  /// 不再一次失败就把"初始化失败"甩给用户。
+  Future<void> write(String key, String value) async {
+    try {
+      await _guard(() => _storage.write(key: key, value: value));
+    } on SecureStorageCorruptedException {
+      Log.d('[SafeMate] secure-storage write failed → reset & retry once');
+      try {
+        await _storage.deleteAll();
+      } catch (_) {}
+      await _guard(() => _storage.write(key: key, value: value));
+    }
+  }
 
   Future<void> delete(String key) => _guard(() => _storage.delete(key: key));
 
