@@ -37,8 +37,8 @@ jobs:
           cp patches/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           cp patches/ic_launcher_foreground.xml android/app/src/main/res/drawable/ic_launcher_foreground.xml
           cp patches/ic_launcher_background.xml android/app/src/main/res/drawable/ic_launcher_background.xml
-          cp patches/app_build.gradle.kts android/app/build.gradle.kts
-          rm -f android/app/build.gradle
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts 2>/dev/null || true
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle 2>/dev/null || true
           echo '-keep class net.sqlcipher.** { *; }' >> android/app/proguard-rules.pro
           echo '-dontwarn com.google.android.play.core.**' >> android/app/proguard-rules.pro
           echo 'shrink=false' >> android/gradle.properties
